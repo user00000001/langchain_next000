@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { Chroma } from "langchain/vectorstores/chroma";
 import { AIMessage, ChatMessage, HumanMessage } from "langchain/schema";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import {
@@ -55,15 +56,23 @@ export async function POST(req: NextRequest) {
       modelName: "gpt-4",
     });
 
-    const client = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PRIVATE_KEY!,
+    // const client = createClient(
+    //   process.env.SUPABASE_URL!,
+    //   process.env.SUPABASE_PRIVATE_KEY!,
+    // );
+    // const vectorstore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
+    //   client,
+    //   tableName: "documents",
+    //   queryName: "match_documents",
+    // });
+
+    const vectorstore = await Chroma.fromExistingCollection(
+      new OpenAIEmbeddings(),
+      {
+        url: "http://localhost:8000",
+        collectionName: "documents"
+      }
     );
-    const vectorstore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
-      client,
-      tableName: "documents",
-      queryName: "match_documents",
-    });
 
     const chatHistory = new ChatMessageHistory(
       previousMessages.map(convertVercelMessageToLangChainMessage),

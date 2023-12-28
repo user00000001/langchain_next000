@@ -1,5 +1,19 @@
 # 🦜️🔗 LangChain + Next.js Starter Template
 
+## 之前只是在某些岗位描述里见过langchain相关描述，最先以为是跟区块链相关，后来初步了解是跟AI相关。机器学习方向好点儿的职位，在面试上我觉得应该很侧重理论推导，例如数学公式那些。虽然我早在17年的时候，在弄爬虫验证码的那时也入门过tensorflow框架(pytorch那时才刚出来)，一些机器学习理论书籍也看过部分，发现需要数学以及统计的基础很好，比如当时卡在svm里的对偶函数那里。虽然我自认工程实践方面还可以，但是要在此方向上得到好点儿的职位，恐怕有些难，当时也有硕士博士在相关岗位上，发觉他们的产出也不怎么好，科班出生的人都不怎么干得好，更何况半路出家的呢，所以那时以后就没去侧重于机器学习方向。
+
+## 最近一年chatgpt忽然变成了话题，公司里也有人在弄(薅api玩，自身业务停滞，上窜下跳，叶公好龙，反感)。我的初步认识是一个更方便智能的搜索引擎，目前还没看到有什么可以形成长期稳定,能商业闭环的项目(即便有，也会很快面临同质化竞争)，商业上也应该是短期项目挣快钱，所以就变成了有好点子且快速交付项目，比的是工程上的集成能力，侧重fullstack，就比较贴合我已有的技术栈。
+
+## 看了一些langchain的文档，都是python的，也是准备后端用python的,但ipython测试的时候chroma的sqlite3版本不满足,pysqlite3-binary也没起作用(后证实chroma的解决方案可行),分析了报错的代码,安装google.colab也无效,重新用源码编译了也不能解决，(开发桌面是deepin 20.9,它的最新sqlite3库比chroma要求的3.35.0低,也不想去升级到测试版系统),想来还是前后端用统一typescript,好编写调试些，后端准备用nestjs来写，后面想来也没必要，整个用nextjs来弄写，一个工程更方便。去看了langchainjs的文档和一些资料，发现langchain-ai里本就有这个方案的模板，考虑到自己对这些库的使用也不一定很熟悉，到时耗时间去调试修改代码，没时间去理解实现功能，所以就直接基于模板库改，完成了再细看一遍代码就行。
+
+## 模板代码运行了下，发出prompt请求后，发现报错`Module not found: Package path ./utils/chunk_array is not exported from package`，@langchain+openai的代码库中issue里也没找到相关解决方案，把@langchain往前往后改版本也不行，在changelogs里看到最近一周确实有`chunk_array`相关的改动，后来根据报错路径在node_module里的代码上排查，确实没有相应的代码实现，继续排查版本信息，应该是@langchain/core库在package.json中被固定了，更新到最新版本，访问报错排除。然后就是代理问题(在ipython里做测试也遇到这种情况)，但是pnpm加all_proxy环境变量无法生效，OPENAI_API_KEY的添加方式也不行，后面使用proxychains去处理的代理问题,域名解析报错,排除了proxychains的dns代理,但搭建本地chroma时,报`Error: Chroma getOrCreateCollection error: Error: TypeError: fetch failed`,排查为proxychains未代理时未排除本地局域网网段,导致127.0.0.1请求到了代理服务器,访问远端的对应端口报错.
+
+## 余下的是根据项目要求和已有的模板代码，该精简的精简,该加的加，该理解的理解,该注释的注释。
+
+### 将模板中使用的远程superbase改为本地的chroma,修复了模板的rag功能,除了Agents项需要第三方SearchApi Loader或SerpAPI Loader没有本地化替代外,其他项都可用;本想将Chat项的history放在了chroma里,先不作用户甄别,每次点开页面都有历史,但测试了些代码发现用不了,所以用了pouchdb-browser,直接保存在客户端浏览器中,仅针对Chat项有效,有对话时刷新可以看见效果
+
+## 总结就是有分析解决突现问题的能力,还需熟悉使用相关库,项目开发速度就快.(期间绕了些路,后端用不太熟悉的node替换python,本可以参考python的资料直接python写，用node还得重新看相关库的node实现部分的api文档)
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/langchain-ai/langchain-nextjs-template)
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flangchain-ai%2Flangchain-nextjs-template)
 

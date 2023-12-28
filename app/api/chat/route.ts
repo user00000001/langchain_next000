@@ -4,6 +4,7 @@ import { Message as VercelChatMessage, StreamingTextResponse } from "ai";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { BytesOutputParser } from "langchain/schema/output_parser";
 import { PromptTemplate } from "langchain/prompts";
+import { ChromaClient } from "chromadb";
 
 export const runtime = "edge";
 
@@ -64,6 +65,17 @@ export async function POST(req: NextRequest) {
     });
 
     return new StreamingTextResponse(stream);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const chroma = new ChromaClient({path: "http://localhost:8000"});
+    const chat_docs = await chroma.getOrCreateCollection({name: "chat_history"});
+    const docs_resp = await chat_docs.query({nResults: 0, queryTexts: ""});
+    return NextResponse.json(docs_resp);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

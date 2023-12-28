@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { useChat } from "ai/react";
-import { useRef, useState, ReactElement } from "react";
+import { useRef, useState, ReactElement, useEffect } from "react";
 import type { FormEvent } from "react";
 import type { AgentStep } from "langchain/schema";
 
@@ -36,6 +36,7 @@ export function ChatWindow(props: {
   );
 
   const [sourcesForMessages, setSourcesForMessages] = useState<Record<string, any>>({});
+  const [isFinished, setIsfinished] = useState(false);
 
   const { messages, input, setInput, handleInputChange, handleSubmit, isLoading: chatEndpointIsLoading, setMessages } =
     useChat({
@@ -52,9 +53,51 @@ export function ChatWindow(props: {
         toast(e.message, {
           theme: "dark"
         });
-      }
+      },
+      onFinish: (m) => setIsfinished(true),
     });
 
+  useEffect(()=>{
+    async function effect() {
+      const PouchDB = await import("pouchdb-browser");
+      const pouchdb = new PouchDB.default("chat_docs");
+      if (endpoint == "api/chat") {
+        let history;
+        try {
+          history = await pouchdb.get<any>("history");
+          console.log(history);
+        } catch(e: any) {
+          await pouchdb.put<any>({
+            _id: 'history',
+            messages: [],
+          });
+          history = {messages: []};
+        }
+        setMessages(history.messages);
+      }
+    };
+    effect();
+  },
+  []);
+  useEffect(()=>{
+    async function effect() {
+      if (endpoint == "api/chat" && isFinished) {
+        const PouchDB = await import("pouchdb-browser");
+        const pouchdb = new PouchDB.default("chat_docs");
+        let history;
+        try {
+          history = await pouchdb.get<any>("history");
+          console.log(history);
+          history.messages = messages;
+          await pouchdb.put<any>(history);
+        } catch(e: any) {
+          console.log(e);
+        }
+      }
+    }
+    effect();
+  }, 
+  [isFinished, endpoint, messages]);
   async function sendMessage(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (messageContainerRef.current) {
@@ -124,7 +167,7 @@ export function ChatWindow(props: {
         ) : (
           ""
         )}
-      </div>
+      </div> { /* 使用自定义的组件,处理展示返回来的消息格式 */ }
 
       {messages.length === 0 && ingestForm}
 
@@ -149,8 +192,34 @@ export function ChatWindow(props: {
             </div>
             <span className={(chatEndpointIsLoading || intermediateStepsLoading) ? "hidden" : ""}>Send</span>
           </button>
+
+          <button type="button" className={`${endpoint !== "api/chat" ? "hidden" : ""} shrink-0 px-8 py-4 bg-sky-600 rounded w-28`} onClick={()=>{
+            async function effect() {
+              const PouchDB = await import("pouchdb-browser");
+              const pouchdb = new PouchDB.default("chat_docs");
+              if (endpoint == "api/chat") {
+                let history;
+                try {
+                  history = await pouchdb.get<any>("history");
+                  console.log(history);
+                  history.messages = []
+                  await pouchdb.put<any>(history);
+                } catch(e: any) {
+                  await pouchdb.put<any>({
+                    _id: 'history',
+                    messages: [],
+                  });
+                  history = {messages: []};
+                }
+                setMessages([]);
+              }
+            }
+            effect();
+          }}>
+            <span>Clear Chat History</span>
+          </button>
         </div>
-      </form>
+      </form> {/* 点击Send时,通过sendMessage向endpoint提交的表单 */}
       <ToastContainer/>
     </div>
   );

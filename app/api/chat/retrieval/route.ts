@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { Chroma } from "langchain/vectorstores/chroma";
 import { Document } from "langchain/document";
 import {
   RunnableSequence,
@@ -83,15 +84,23 @@ export async function POST(req: NextRequest) {
       temperature: 0.2
     });
 
-    const client = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PRIVATE_KEY!,
+    // const client = createClient(
+    //   process.env.SUPABASE_URL!,
+    //   process.env.SUPABASE_PRIVATE_KEY!,
+    // );
+    // const vectorstore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
+    //   client,
+    //   tableName: "documents",
+    //   queryName: "match_documents",
+    // });
+
+    const vectorstore = await Chroma.fromExistingCollection(
+      new OpenAIEmbeddings(),
+      {
+        collectionName: "documents",
+        url: "http://localhost:8000"
+      }
     );
-    const vectorstore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
-      client,
-      tableName: "documents",
-      queryName: "match_documents",
-    });
 
     /**
      * We use LangChain Expression Language to compose two chains.

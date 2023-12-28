@@ -1,6 +1,6 @@
 import type { Message } from "ai/react";
 
-export function ChatMessageBubble(props: { message: Message, aiEmoji?: string, sources: any[] }) {
+export function ChatMessageBubble(props: { message: Message, aiEmoji?: string, sources: any[] }) { // 对话框组件
   const colorClassName =
     props.message.role === "user" ? "bg-sky-600" : "bg-slate-50 text-black";
   const alignmentClassName =

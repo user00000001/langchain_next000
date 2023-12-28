@@ -5,7 +5,7 @@ import DEFAULT_RETRIEVAL_TEXT from "@/data/DefaultRetrievalText";
 
 export function UploadDocumentsForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [document, setDocument] = useState(DEFAULT_RETRIEVAL_TEXT);
+  const [document, setDocument] = useState(DEFAULT_RETRIEVAL_TEXT); // 默认的markdown文本内容
   const ingest = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -26,7 +26,7 @@ export function UploadDocumentsForm() {
     setIsLoading(false);
   };
   return (
-    <form onSubmit={ingest} className="flex w-full mb-4">
+    <form onSubmit={ingest} className="flex w-full mb-4"> {/*将表单信息交由ingest提交到后端api*/}
     <textarea
       className="grow mr-8 p-4 rounded"
       value={document}
